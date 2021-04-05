@@ -1,6 +1,7 @@
 # Custom
 bot.py
 lichess.py
+setup.py
 
 # Distribution / packaging
 .Python
