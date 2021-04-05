@@ -1,5 +1,4 @@
 import chess
-import time
 import chess.polyglot
 from multiprocessing import Process, Queue
 from evaluation import evaluation
@@ -43,7 +42,6 @@ def find_best_move(board, valid_moves):
                 valid_moves.insert(0, move)
 
     q = Queue()
-    START_TIME = time.time()
     processes = [Process(target=negamax, args=(board, valid_moves[:round(lenght*0.2)], DEPTH, MIN_VALUE, MAX_VALUE, side, DEPTH, q)),
                  Process(target=negamax, args=(board, valid_moves[round(lenght*0.2):round(lenght*0.4)], DEPTH, MIN_VALUE, MAX_VALUE, side, DEPTH, q)),
                  Process(target=negamax, args=(board, valid_moves[round(lenght*0.4):round(lenght*0.6)], DEPTH, MIN_VALUE, MAX_VALUE, side, DEPTH, q)),
