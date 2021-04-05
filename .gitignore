@@ -1,3 +1,7 @@
+# Custom
+bot.py
+lichess.py
+
 # Distribution / packaging
 .Python
 build/

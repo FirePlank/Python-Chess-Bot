@@ -83,18 +83,19 @@ def main():
                 DEPTH = int(splitted[splitted.index("depth")+1])
             except: pass
             try:
-                white_time = int(splitted[splitted.index("wtime")+1])/1000000
-                black_time = int(splitted[splitted.index("btime")+1])/1000000
-                white_inc = int(splitted[splitted.index("winc")+1])/1000000
-                black_inc = int(splitted[splitted.index("binc") + 1]) / 1000000
+                if DEPTH>2:
+                    white_time = int(splitted[splitted.index("wtime")+1])/1000000
+                    black_time = int(splitted[splitted.index("btime")+1])/1000000
+                    white_inc = int(splitted[splitted.index("winc")+1])/1000000
+                    black_inc = int(splitted[splitted.index("binc") + 1]) / 1000000
 
-                think_time = (white_time+white_inc)/30 if board.turn else (black_time+black_inc)/30
-                if white_time + white_inc < 5 and board.turn: DEPTH = 1
-                elif white_time + white_inc < 25 and board.turn: DEPTH = 2
-                elif white_time + white_inc < 45 and board.turn: DEPTH = 3
-                elif black_time + black_inc < 5 and not board.turn: DEPTH = 1
-                elif black_time + black_inc < 25 and not board.turn: DEPTH = 2
-                elif black_time + black_inc < 45 and not board.turn: DEPTH = 3
+                    think_time = (white_time+white_inc)/30 if board.turn else (black_time+black_inc)/30
+                    if white_time + white_inc < 5 and board.turn: DEPTH = 1
+                    elif white_time + white_inc < 25 and board.turn: DEPTH = 2
+                    elif white_time + white_inc < 45 and board.turn: DEPTH = 3
+                    elif black_time + black_inc < 5 and not board.turn: DEPTH = 1
+                    elif black_time + black_inc < 25 and not board.turn: DEPTH = 2
+                    elif black_time + black_inc < 45 and not board.turn: DEPTH = 3
             except: pass
 
             while 1:
