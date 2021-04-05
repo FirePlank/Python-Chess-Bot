@@ -228,16 +228,21 @@ cdef int amount_of_pins(board, bint color):
 cpdef evaluation(board, maximizing_color):
     global KING_SQUARE_EVAL, FIRST_END, FIRST_MIDDLE, PIECE_VALUES
 
-    # Checks if its checkmate instantly
+    cdef str result = board.result()
+    # Checks if its checkmate
     if board.is_checkmate():
-        if maximizing_color == chess.WHITE and str(board.result()) == "1-0":
+        if maximizing_color == chess.WHITE and result == "1-0":
             return 99999999999999
-        elif maximizing_color == chess.WHITE and str(board.result()) == "0-1":
+        elif maximizing_color == chess.WHITE and result == "0-1":
             return -99999999999999
-        elif maximizing_color == chess.BLACK and str(board.result()) == "0-1":
+        elif maximizing_color == chess.BLACK and result == "0-1":
             return 99999999999999
-        elif maximizing_color == chess.BLACK and str(board.result()) == "1-0":
+        elif maximizing_color == chess.BLACK and result == "1-0":
             return -99999999999999
+
+    # Checks if its a draw
+    if board.is_game_over() and result == "1/2-1/2":
+        return 0
 
     endgame = is_endgame(board)
     file_map = pm_to_filemap(board.piece_map())

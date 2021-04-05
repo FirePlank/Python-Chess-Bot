@@ -28,18 +28,9 @@ def find_best_move(board, valid_moves):
 
     # Move ordering
     for index, move in enumerate(valid_moves):
-        prev = board.move_stack
-        try:
-            if move == prev[-2] and move == prev[-4] and prev[-1] == prev[-3]:
-                if evaluation(board, side) > -600:
-                    valid_moves.pop(index)
-            elif board.is_capture(move) or board.is_into_check(move):
-                valid_moves.pop(index)
-                valid_moves.insert(0, move)
-        except:
-            if board.is_capture(move) or board.is_into_check(move):
-                valid_moves.pop(index)
-                valid_moves.insert(0, move)
+        if board.is_capture(move) or board.is_into_check(move):
+            valid_moves.pop(index)
+            valid_moves.insert(0, move)
 
     q = Queue()
     processes = [Process(target=negamax, args=(board, valid_moves[:round(lenght*0.2)], DEPTH, MIN_VALUE, MAX_VALUE, side, DEPTH, q)),
