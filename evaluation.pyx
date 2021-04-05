@@ -3,7 +3,6 @@ import chess
 cdef dict PIECE_VALUES = {chess.PAWN: 100, chess.KNIGHT: 300, chess.BISHOP: 325, chess.ROOK: 500, chess.QUEEN: 900,
                 chess.KING: 9999}
 cdef bint FIRST_END = True
-cdef bint FIRST_MIDDLE = True
 
 cdef list PAWN_SQUARE_EVAL = [
     0, 0, 0, 0, 0, 0, 0, 0,
@@ -17,13 +16,13 @@ cdef list PAWN_SQUARE_EVAL = [
 ]
 
 cdef list KNIGHT_SQUARE_EVAL = [
-    -50, -40, -30, -30, -30, -30, -40, -50,
-    -40, -20, 0, 0, 0, 0, -20, -40,
-    -30, 0, 10, 15, 15, 10, 0, -30,
-    -30, 5, 15, 20, 20, 15, 5, -30,
-    -30, 5, 15, 20, 20, 15, 5, -30,
+    -50, -30, -30, -30, -30, -30, -30, -50,
+    -40, -5, 0, 0, 0, 0, -5, -40,
+    -30, 0, 15, 15, 15, 15, 0, -30,
+    -30, 5, 15, 30, 30, 15, 5, -30,
+    -30, 5, 15, 30, 30, 15, 5, -30,
     -40, 0, 15, 15, 15, 15, 0, -40,
-    -40, -20, 0, 0, 0, 0, -20, -40,
+    -40, -5, 0, 0, 0, 0, -5, -40,
     -50, -40, -30, -30, -30, -30, -40, -50,
 ]
 
@@ -35,7 +34,7 @@ cdef list BISHOP_SQUARE_EVAL = [
     -10, 0, 10, 10, 10, 10, 0, -10,
     -10, 10, 10, 10, 10, 10, 10, -10,
     -10, 10, 0, 0, 0, 0, 10, -10,
-    -20, -10, -10, -10, -10, -10, -10, -20
+    -20, -10, -20, -10, -10, -20, -10, -20
 ]
 
 cdef list ROOK_SQUARE_EVAL = [
@@ -104,7 +103,6 @@ cdef bint is_open_file(board, int board_file):
             break
     return open_file
 
-
 cdef int passed_pawn(pm, bint is_end_game):
     cdef list whiteYmax = [-1] * 8
     cdef list blackYmin = [8] * 8
@@ -150,7 +148,6 @@ cdef int passed_pawn(pm, bint is_end_game):
 
     return score
 
-
 cdef pm_to_filemap(piece_map):
     cdef list files = [0] * (8 * 7 * 2)
 
@@ -158,7 +155,6 @@ cdef pm_to_filemap(piece_map):
         files[piece.color * 8 * 7 + piece.piece_type * 8 + (p & 7)] += 1
 
     return files
-
 
 cdef int double_pawns(file_map):
     cdef int n = 0
@@ -172,7 +168,6 @@ cdef int double_pawns(file_map):
 
     return n
 
-
 cdef bint is_endgame(board):
     cdef int pieces = 0
     PIECE_VALUE = {chess.KNIGHT: 300, chess.BISHOP: 325, chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 9999}
@@ -181,16 +176,6 @@ cdef bint is_endgame(board):
         pieces += len(board.pieces(key, chess.BLACK))
     cdef int moves = len(board.move_stack)
     return True if moves > 20 and pieces <= 5 else False
-
-
-cdef bint is_middle_game(board):
-    cdef int pieces = 0
-    for key in PIECE_VALUES.keys():
-        pieces += len(board.pieces(key, chess.WHITE))
-        pieces += len(board.pieces(key, chess.BLACK))
-    cdef int moves = len(board.move_stack)
-    return True if moves > 15 and pieces > 15 else False
-
 
 cdef int count_rooks_on_open_file(file_map):
     cdef int n = 0
@@ -201,7 +186,6 @@ cdef int count_rooks_on_open_file(file_map):
         if file_map[chess.BLACK * 8 * 7 + chess.PAWN * 8 + i] == 0 and file_map[chess.BLACK * 8 * 7 + chess.ROOK * 8 + i] > 0:
             n -= 1
     return n
-
 
 cdef int king_near_open_files(file_map, bint color):
     cdef int n = 0
@@ -215,7 +199,6 @@ cdef int king_near_open_files(file_map, bint color):
             color * 8 * 7 + chess.KING * 8 + i] > 0:
             n += 1
     return n
-
 
 cdef int amount_of_pins(board, bint color):
     cdef int pinned = 0
@@ -261,18 +244,6 @@ cpdef evaluation(board, maximizing_color):
 
         PIECE_VALUES = {chess.PAWN: 250, chess.KNIGHT: 350, chess.BISHOP: 325, chess.ROOK: 500, chess.QUEEN: 900,
                         chess.KING: 9999}
-
-    # Updates square evaluations if middle game and if not already done so
-    elif FIRST_MIDDLE and is_middle_game(board):
-        FIRST_MIDDLE = False
-        KING_SQUARE_EVAL = [-30, -40, -40, -50, -50, -40, -40, -30,
-                            -30, -40, -40, -50, -50, -40, -40, -30,
-                            -30, -40, -40, -50, -50, -40, -40, -30,
-                            -30, -40, -40, -50, -50, -40, -40, -30,
-                            -20, -30, -30, -40, -40, -30, -30, -20,
-                            -10, -20, -20, -20, -20, -20, -20, -10,
-                            15, 10, 0, 0, 0, 0, 10, 15,
-                            25, 25, 10, 0, 0, 10, 25, 25]
 
     cdef int white_score = 0
     cdef int black_score = 0
