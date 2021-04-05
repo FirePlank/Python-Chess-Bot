@@ -52,21 +52,21 @@ cdef list QUEEN_SQUARE_EVAL = [
     -20, -10, -10, -5, -5, -10, -10, -20,
     -10, 0, 0, 0, 0, 0, 0, -10,
     -10, 0, 5, 5, 5, 5, 0, -10,
-    -5, 0, 5, 5, 5, 5, 0, -5,
+    -5, 0, 5, 15, 15, 15, 0, -5,
     0, 5, 5, 15, 15, 15, 5, 0,
     -10, 5, 10, 10, 10, 10, 0, -10,
-    -10, 0, 5, 0, 0, 0, 0, -10,
+    -10, 0, 5, 5, 5, 5, 0, -10,
     -20, -10, -10, -5, -5, -10, -10, -20
 ]
 
 cdef list KING_SQUARE_EVAL = [
-    -30, -40, -40, -50, -50, -40, -40, -30,
-    -30, -40, -40, -50, -50, -40, -40, -30,
-    -30, -40, -40, -50, -50, -40, -40, -30,
-    -30, -40, -40, -50, -50, -40, -40, -30,
-    -20, -30, -30, -40, -40, -30, -30, -20,
-    -10, -20, -20, -20, -20, -20, -20, -10,
-    5, 5, -10, -10, -10, -10, 5, 5,
+    -99, -99, -99, -99, -99, -99, -99, -99,
+    -80, -80, -80, -80, -80, -80, -80, -80,
+    -50, -50, -50, -50, -50, -50, -50, -50,
+    -40, -40, -40, -50, -50, -40, -40, -40,
+    -40, -40, -40, -40, -40, -40, -40, -40,
+    -40, -40, -40, -40, -40, -40, -40, -40,
+    5, 5, -20, -20, -20, -20, 5, 5,
     20, 20, 15, 0, 0, 0, 25, 25
 ]
 
@@ -170,7 +170,7 @@ cdef int double_pawns(file_map):
 
 cdef bint is_endgame(board):
     cdef int pieces = 0
-    PIECE_VALUE = {chess.KNIGHT: 300, chess.BISHOP: 325, chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 9999}
+    PIECE_VALUE = {chess.KNIGHT: 300, chess.BISHOP: 325, chess.ROOK: 500, chess.QUEEN: 900}
     for key in PIECE_VALUE.keys():
         pieces += len(board.pieces(key, chess.WHITE))
         pieces += len(board.pieces(key, chess.BLACK))
@@ -248,6 +248,10 @@ cpdef evaluation(board, maximizing_color):
     cdef int white_score = 0
     cdef int black_score = 0
 
+    # Checks for bishop pair
+    if str(board).count("B")>=2:white_score+=30
+    elif str(board).count("b")>=2:black_score+=30
+
     # Gives points for all the pieces
     for key in PIECE_VALUES.keys():
         white_score += len(board.pieces(key, chess.WHITE)) * (PIECE_VALUES[key] * 5)
@@ -262,10 +266,9 @@ cpdef evaluation(board, maximizing_color):
     board.turn = turn
 
     # Reduces points based on the amount of pawn islands
-    white_score -= (pawn_islands(board, True) * 5)
-    black_score -= (pawn_islands(board, False) * 5)
+    #white_score -= (pawn_islands(board, True) * 5)
+    #black_score -= (pawn_islands(board, False) * 5)
 
-    # Checks if king is safe
 
     # Checks if kings are on or near an open file
     if not endgame:
@@ -289,15 +292,15 @@ cpdef evaluation(board, maximizing_color):
         white_score += abs(passed_pawns)
 
     # Checks for doubled pawns
-    cdef int doubled_pawns = double_pawns(file_map)
-    if doubled_pawns < 0:
-        black_score -= abs(doubled_pawns) * 10
-    else:
-        white_score -= abs(doubled_pawns) * 10
+    #cdef int doubled_pawns = double_pawns(file_map)
+    #if doubled_pawns < 0:
+    #    black_score -= abs(doubled_pawns) * 10
+    #else:
+    #    white_score -= abs(doubled_pawns) * 10
 
     # Checks for absolute pins
-    white_score -= amount_of_pins(board, True) * 15
-    black_score -= amount_of_pins(board, False) * 15
+    #white_score -= amount_of_pins(board, True) * 15
+    #black_score -= amount_of_pins(board, False) * 15
 
     # Gives points based on the pieces locations for white
     pieces = board.piece_map()
