@@ -2,6 +2,12 @@ import json
 import asyncio
 import time
 
+import os
+import stat
+
+st = os.stat('main.sh')
+os.chmod('main.sh', st.st_mode | stat.S_IEXEC)
+
 import chess
 import chess.engine
 from termcolor import cprint
