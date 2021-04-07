@@ -10,9 +10,9 @@ import lichess
 
 BASE_URL = "https://lichess.org"
 TOKEN = "kTAA8rwMEoYNNAc3"  # Token for lichess
-ENGINE = "uci.cmd"  # Path of binary or batch script
+ENGINE = "Chess_Engine.exe"  # Path of binary or batch script
 
-Engine = chess.engine.SimpleEngine.popen_uci('main.cmd')
+Engine = chess.engine.SimpleEngine.popen_uci('Chess_Engine.exe')
 
 LOG = False
 COLOR = False
