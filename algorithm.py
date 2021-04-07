@@ -1,7 +1,7 @@
 import chess
 from evaluation import evaluation
 
-cpdef int negamax(board, list valid_moves, int depth, alpha, beta, maximizing_player, int DEPTH=4, q=None):
+def negamax(board, valid_moves, depth, alpha, beta, maximizing_player, DEPTH = 4, q = None):
     max_score = -999999999
 
     if depth == 0:
@@ -18,8 +18,8 @@ cpdef int negamax(board, list valid_moves, int depth, alpha, beta, maximizing_pl
                 next_moves.pop(index)
                 next_moves.insert(0, pos_move)
 
-        side = chess.WHITE if maximizing_player==chess.BLACK else chess.BLACK
-        score = -negamax(copy_board, next_moves, depth-1, -beta, -alpha, side, DEPTH, q)
+        side = chess.WHITE if maximizing_player == chess.BLACK else chess.BLACK
+        score = -negamax(copy_board, next_moves, depth - 1, -beta, -alpha, side, DEPTH, q)
         if score > max_score:
             max_score = score
             if depth == DEPTH:
@@ -29,5 +29,5 @@ cpdef int negamax(board, list valid_moves, int depth, alpha, beta, maximizing_pl
             alpha = max_score
         if alpha >= beta:
             break
-            
+
     return max_score

@@ -1,10 +1,11 @@
 import chess
 
-cdef dict PIECE_VALUES = {chess.PAWN: 100, chess.KNIGHT: 300, chess.BISHOP: 325, chess.ROOK: 500, chess.QUEEN: 900,
+PIECE_VALUES = {chess.PAWN: 100, chess.KNIGHT: 300, chess.BISHOP: 325, chess.ROOK: 500, chess.QUEEN: 900,
                 chess.KING: 9999}
-cdef bint FIRST_END = True
+FIRST_END = True
+FIRST_MIDDLE = True
 
-cdef list PAWN_SQUARE_EVAL = [
+PAWN_SQUARE_EVAL = [
     0, 0, 0, 0, 0, 0, 0, 0,
     50, 50, 50, 50, 50, 50, 50, 50,
     10, 10, 20, 30, 30, 20, 10, 10,
@@ -15,7 +16,7 @@ cdef list PAWN_SQUARE_EVAL = [
     0, 0, 0, 0, 0, 0, 0, 0
 ]
 
-cdef list KNIGHT_SQUARE_EVAL = [
+KNIGHT_SQUARE_EVAL = [
     -50, -30, -30, -30, -30, -30, -30, -50,
     -40, -5, 0, 0, 0, 0, -5, -40,
     -30, 0, 15, 15, 15, 15, 0, -30,
@@ -26,7 +27,7 @@ cdef list KNIGHT_SQUARE_EVAL = [
     -50, -40, -30, -30, -30, -30, -40, -50,
 ]
 
-cdef list BISHOP_SQUARE_EVAL = [
+BISHOP_SQUARE_EVAL = [
     -20, -10, -10, -10, -10, -10, -10, -20,
     -10, 0, 0, 0, 0, 0, 0, -10,
     -10, 0, 5, 10, 10, 5, 0, -10,
@@ -37,7 +38,7 @@ cdef list BISHOP_SQUARE_EVAL = [
     -20, -10, -20, -10, -10, -20, -10, -20
 ]
 
-cdef list ROOK_SQUARE_EVAL = [
+ROOK_SQUARE_EVAL = [
     0, 0, 0, 0, 0, 0, 0, 0,
     40, 40, 40, 40, 40, 40, 40, 40,
     -5, 0, 0, 0, 0, 0, 0, -5,
@@ -48,7 +49,7 @@ cdef list ROOK_SQUARE_EVAL = [
     0, 0, 0, 10, 10, 0, 0, 0,
 ]
 
-cdef list QUEEN_SQUARE_EVAL = [
+QUEEN_SQUARE_EVAL = [
     -20, -10, -10, -5, -5, -10, -10, -20,
     -10, 0, 0, 0, 0, 0, 0, -10,
     -10, 0, 5, 5, 5, 5, 0, -10,
@@ -59,23 +60,22 @@ cdef list QUEEN_SQUARE_EVAL = [
     -20, -10, -10, -5, -5, -10, -10, -20
 ]
 
-cdef list KING_SQUARE_EVAL = [
+KING_SQUARE_EVAL = [
     -99, -99, -99, -99, -99, -99, -99, -99,
     -80, -80, -80, -80, -80, -80, -80, -80,
     -50, -50, -50, -50, -50, -50, -50, -50,
     -40, -40, -40, -50, -50, -40, -40, -40,
     -40, -40, -40, -40, -40, -40, -40, -40,
     -40, -40, -40, -40, -40, -40, -40, -40,
-    5, 5, -20, -20, -20, -20, 5, 5,
+    5, 5, -40, -40, -40, -40, 5, 5,
     20, 20, 15, 0, 0, 0, 25, 25
 ]
 
-
-cdef int pawn_islands(board, bint color):
-    cdef bint seen = False
-    cdef int square = 0
-    cdef int increment = 0
-    cdef int islands = 1
+def pawn_islands(board: chess.Board, color: bool):
+    seen = False
+    square = 0
+    increment = 0
+    islands = 1
     for x in range(8):
         for i in range(7):
             square += 8
@@ -92,20 +92,22 @@ cdef int pawn_islands(board, bint color):
 
     return islands
 
-cdef bint is_open_file(board, int board_file):
-    cdef bint open_file = True
-    for _ in range(7):
-        board_file += 8
-        piece = board.piece_at(board_file)
+
+def is_open_file(board, file):
+    open_file = True
+    for i in range(7):
+        file += 8
+        piece = board.piece_at(file)
         if piece is None: continue
         if piece.piece_type == chess.PAWN:
             open_file = False
             break
     return open_file
 
-cdef int passed_pawn(pm, bint is_end_game):
-    cdef list whiteYmax = [-1] * 8
-    cdef list blackYmin = [8] * 8
+
+def passed_pawn(pm, is_end_game):
+    whiteYmax = [-1] * 8
+    blackYmin = [8] * 8
 
     for key, p in pm.items():
         if p.piece_type != chess.PAWN:
@@ -119,9 +121,9 @@ cdef int passed_pawn(pm, bint is_end_game):
         else:
             blackYmin[x] = min(blackYmin[x], y)
 
-    cdef list scores = [[0, 5, 15, 20, 30, 40, 75, 0], [0, 15, 30, 50, 80, 130, 210, 0]]
+    scores = [[0, 5, 15, 20, 30, 40, 75, 0], [0, 15, 30, 50, 80, 130, 210, 0]]
 
-    cdef int score = 0
+    score = 0
 
     for key, p in pm.items():
         if p.piece_type != chess.PAWN:
@@ -148,16 +150,18 @@ cdef int passed_pawn(pm, bint is_end_game):
 
     return score
 
-cdef pm_to_filemap(piece_map):
-    cdef list files = [0] * (8 * 7 * 2)
+
+def pm_to_filemap(piece_map):
+    files = [0] * (8 * 7 * 2)
 
     for p, piece in piece_map.items():
         files[piece.color * 8 * 7 + piece.piece_type * 8 + (p & 7)] += 1
 
     return files
 
-cdef int double_pawns(file_map):
-    cdef int n = 0
+
+def double_pawns(file_map):
+    n = 0
 
     for i in range(0, 8):
         if file_map[chess.WHITE * 8 * 7 + chess.PAWN * 8 + i] >= 2:
@@ -168,17 +172,19 @@ cdef int double_pawns(file_map):
 
     return n
 
-cdef bint is_endgame(board):
-    cdef int pieces = 0
-    PIECE_VALUE = {chess.KNIGHT: 300, chess.BISHOP: 325, chess.ROOK: 500, chess.QUEEN: 900}
+
+def is_endgame(board):
+    pieces = 0
+    PIECE_VALUE = {chess.KNIGHT: 300, chess.BISHOP: 325, chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 9999}
     for key in PIECE_VALUE.keys():
         pieces += len(board.pieces(key, chess.WHITE))
         pieces += len(board.pieces(key, chess.BLACK))
-    cdef int moves = len(board.move_stack)
+    moves = len(board.move_stack)
     return True if moves > 20 and pieces <= 5 else False
 
-cdef int count_rooks_on_open_file(file_map):
-    cdef int n = 0
+
+def count_rooks_on_open_file(file_map):
+    n = 0
     for i in range(0, 8):
         if file_map[chess.WHITE * 8 * 7 + chess.PAWN * 8 + i] == 0 and file_map[chess.WHITE * 8 * 7 + chess.ROOK * 8 + i] > 0:
             n += 1
@@ -187,8 +193,9 @@ cdef int count_rooks_on_open_file(file_map):
             n -= 1
     return n
 
-cdef int king_near_open_files(file_map, bint color):
-    cdef int n = 0
+
+def king_near_open_files(file_map, color):
+    n = 0
     for i in range(0, 8):
         if file_map[color * 8 * 7 + chess.PAWN * 8 + i] == 0 and file_map[color * 8 * 7 + chess.KING * 8 + i] > 0:
             n += 2
@@ -200,18 +207,11 @@ cdef int king_near_open_files(file_map, bint color):
             n += 1
     return n
 
-cdef int amount_of_pins(board, bint color):
-    cdef int pinned = 0
-    cdef int i
-    for i in range(64):
-        if board.is_pinned(color, i): pinned += 1
-    return pinned
 
-
-cpdef evaluation(board, maximizing_color):
+def evaluation(board, maximizing_color):
     global KING_SQUARE_EVAL, FIRST_END, FIRST_MIDDLE, PIECE_VALUES
 
-    cdef str result = board.result()
+    result = board.result()
     # Checks if its checkmate
     if board.is_checkmate():
         if maximizing_color == chess.WHITE and result == "1-0":
@@ -245,12 +245,14 @@ cpdef evaluation(board, maximizing_color):
         PIECE_VALUES = {chess.PAWN: 250, chess.KNIGHT: 350, chess.BISHOP: 325, chess.ROOK: 500, chess.QUEEN: 900,
                         chess.KING: 9999}
 
-    cdef int white_score = 0
-    cdef int black_score = 0
+    white_score = 0
+    black_score = 0
 
     # Checks for bishop pair
-    if str(board).count("B")>=2:white_score+=30
-    elif str(board).count("b")>=2:black_score+=30
+    if str(board).count("B") >= 2:
+        white_score += 30
+    elif str(board).count("b") >= 2:
+        black_score += 30
 
     # Gives points for all the pieces
     for key in PIECE_VALUES.keys():
@@ -258,7 +260,7 @@ cpdef evaluation(board, maximizing_color):
         black_score += len(board.pieces(key, chess.BLACK)) * (PIECE_VALUES[key] * 5)
 
     # Gives points for all the available moves
-    cdef bint turn = board.turn
+    turn = board.turn
     board.turn = True
     white_score += board.legal_moves.count()
     board.turn = False
@@ -266,9 +268,10 @@ cpdef evaluation(board, maximizing_color):
     board.turn = turn
 
     # Reduces points based on the amount of pawn islands
-    #white_score -= (pawn_islands(board, True) * 5)
-    #black_score -= (pawn_islands(board, False) * 5)
+    white_score -= (pawn_islands(board, True) * 5)
+    black_score -= (pawn_islands(board, False) * 5)
 
+    # Checks if king is safe
 
     # Checks if kings are on or near an open file
     if not endgame:
@@ -276,14 +279,14 @@ cpdef evaluation(board, maximizing_color):
         black_score -= abs(king_near_open_files(file_map, chess.BLACK)) * 22
 
     # Checks if rooks are on open files
-    cdef int rooks_on_open_files = count_rooks_on_open_file(file_map)
+    rooks_on_open_files = count_rooks_on_open_file(file_map)
     if rooks_on_open_files < 0:
         black_score += abs(rooks_on_open_files) * 30
     else:
         white_score += abs(rooks_on_open_files) * 30
 
     # Checks for passed pawns
-    cdef int passed_pawns = passed_pawn(board.piece_map(), endgame)
+    passed_pawns = passed_pawn(board.piece_map(), endgame)
     if passed_pawns < 0:
         black_score += abs(passed_pawns)
         white_score -= abs(passed_pawns)
@@ -292,15 +295,11 @@ cpdef evaluation(board, maximizing_color):
         white_score += abs(passed_pawns)
 
     # Checks for doubled pawns
-    #cdef int doubled_pawns = double_pawns(file_map)
-    #if doubled_pawns < 0:
-    #    black_score -= abs(doubled_pawns) * 10
-    #else:
-    #    white_score -= abs(doubled_pawns) * 10
-
-    # Checks for absolute pins
-    #white_score -= amount_of_pins(board, True) * 15
-    #black_score -= amount_of_pins(board, False) * 15
+    doubled_pawns = double_pawns(file_map)
+    if doubled_pawns < 0:
+        black_score -= abs(doubled_pawns) * 10
+    else:
+        white_score -= abs(doubled_pawns) * 10
 
     # Gives points based on the pieces locations for white
     pieces = board.piece_map()
