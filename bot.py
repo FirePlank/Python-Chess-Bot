@@ -12,7 +12,7 @@ BASE_URL = "https://lichess.org"
 TOKEN = "kTAA8rwMEoYNNAc3"  # Token for lichess
 ENGINE = "Chess_Engine.exe"  # Path of binary or batch script
 
-Engine = chess.engine.SimpleEngine.popen_uci('Chess_Engine.exe')
+Engine = chess.engine.SimpleEngine.popen_uci('main.sh')
 
 LOG = False
 COLOR = False
