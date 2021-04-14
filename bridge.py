@@ -2,7 +2,7 @@ import chess
 import chess.polyglot
 import chess.engine
 
-Engine = chess.engine.SimpleEngine.popen_uci('FirefullBot.exe')
+Engine = chess.engine.SimpleEngine.popen_uci('/app/main.exe')
 
 def opening_book(board, file):
     best_move = (None, 0)
