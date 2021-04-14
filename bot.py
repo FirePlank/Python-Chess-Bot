@@ -2,12 +2,6 @@ import json
 import asyncio
 import time
 
-import os
-import stat
-
-st = os.stat('main.sh')
-os.chmod('main.sh', st.st_mode | stat.S_IEXEC)
-
 import chess
 import chess.engine
 from termcolor import cprint
@@ -16,12 +10,19 @@ import lichess
 
 BASE_URL = "https://lichess.org"
 TOKEN = "kTAA8rwMEoYNNAc3"  # Token for lichess
-ENGINE = "Chess_Engine.exe"  # Path of binary or batch script
 
-Engine = chess.engine.SimpleEngine.popen_uci('/app/main.sh')
+import os
+import stat
+
+st = os.stat('main.sh')
+os.chmod('main.sh', st.st_mode | stat.S_IEXEC)
+
+Engine = chess.engine.SimpleEngine.popen_uci('main.sh')
 
 LOG = False
 COLOR = False
+
+GAME_ONGOING = False
 
 
 def info(*why):
@@ -44,7 +45,7 @@ def log(*why):
 
 
 async def event_stream(li: lichess.Lichess):
-    global first_time
+    global first_time, GAME_ONGOING
     game_threads = []
 
     try:
@@ -56,10 +57,14 @@ async def event_stream(li: lichess.Lichess):
                 log("Event:", event)
                 if event["type"] == "challenge":
                     challenge = event["challenge"]
-                    if challenge["variant"]["name"] != "Standard" and challenge["variant"]["name"] != "From Position":
-                        li.decline_challenge(challenge["id"])
+                    if GAME_ONGOING:
+                        li.decline_challenge(challenge["id"], "Sorry, I'm currently in a game right now and I can only play one at a time. This will hopefully soon change!")
+
+                    elif challenge["variant"]["name"] != "Standard" and challenge["variant"]["name"] != "From Position":
+                        li.decline_challenge(challenge["id"], "Sorry, I only accept challenges to the standard variant.")
                         info(f"Declined challenge {challenge['id']} ({challenge['url']}) from {challenge['challenger']['name']} ({challenge['challenger']['rating']})")
                     else:
+                        GAME_ONGOING = True
                         li.accept_challenge(challenge["id"])
                         try:li.chat(challenge["id"], "player", "Hi! It's brave for you to challenge me. Let's see if you've got what it takes to beat me. glhf :)")
                         except:pass
@@ -76,7 +81,7 @@ async def event_stream(li: lichess.Lichess):
 
 
 async def game_stream(li: lichess.Lichess, game_id: str):
-    global first_time
+    global first_time, GAME_ONGOING
     print("START")
     is_white = True
 
@@ -121,10 +126,10 @@ async def game_stream(li: lichess.Lichess, game_id: str):
 
                             # Play move
                             start = time.time()
-                            result = Engine.play(board, chess.engine.Limit(white_clock=event["wtime"], black_clock=event["btime"], white_inc=event["winc"], black_inc=event["binc"], depth=4))
+                            result = Engine.play(board, chess.engine.Limit(white_clock=event["wtime"], black_clock=event["btime"], white_inc=event["winc"], black_inc=event["binc"], depth=5))
                             info("Think time taken: " + str(round(time.time()-start, 2)))
                             try:
-                                if result.move is None:
+                                if result.move == "a1h8":
                                     li.resign(game_id)
                                 else:
                                     li.make_move(game_id, result.move)
@@ -134,6 +139,7 @@ async def game_stream(li: lichess.Lichess, game_id: str):
                             info(
                                 f"Game {game_id} ended due to {event['status']}."
                                 f"{' Winner: ' + event['winner'] if 'winner' in event else ''}")
+                            GAME_ONGOING = False
                             return
     except KeyboardInterrupt:
         return
