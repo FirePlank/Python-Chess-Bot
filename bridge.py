@@ -2,6 +2,12 @@ import chess
 import chess.polyglot
 import chess.engine
 
+import os
+import stat
+
+st = os.stat('/app/main.exe')
+os.chmod('/app/main.exe', st.st_mode | stat.S_IEXEC)
+
 Engine = chess.engine.SimpleEngine.popen_uci('/app/main.exe')
 
 def opening_book(board, file):
