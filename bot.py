@@ -17,7 +17,7 @@ import stat
 st = os.stat('app/main.sh')
 os.chmod('app/main.sh', st.st_mode | stat.S_IEXEC)
 
-Engine = chess.engine.SimpleEngine.popen_uci('main.sh')
+Engine = chess.engine.SimpleEngine.popen_uci('app/main.sh')
 
 LOG = False
 COLOR = False
