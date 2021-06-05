@@ -14,10 +14,7 @@ TOKEN = "kTAA8rwMEoYNNAc3"  # Token for lichess
 import os
 import stat
 
-st = os.stat('/app/main.sh')
-os.chmod('/app/main.sh', st.st_mode | stat.S_IEXEC)
-
-Engine = chess.engine.SimpleEngine.popen_uci('/app/main.sh')
+Engine = chess.engine.SimpleEngine.popen_uci('main.cmd')
 
 LOG = False
 COLOR = False
@@ -81,7 +78,8 @@ async def event_stream(li: lichess.Lichess):
 
 
 async def game_stream(li: lichess.Lichess, game_id: str):
-    global first_time, GAME_ONGOING
+    global first_time, GAME_ONGOING, org_fen
+    org_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     print("START")
     is_white = True
 
@@ -98,6 +96,10 @@ async def game_stream(li: lichess.Lichess, game_id: str):
     # - Speed: {event['speed']}
     # - White: {event['white']['name']}({event['white']['rating']})
     # - Black: {event['black']['name']}({event['black']['rating']})""")
+                    try:
+                        org_fen = event['initialFen']
+                    except:
+                        pass
                     is_white = event["white"]["id"] == li.get_profile()["id"]
                     # info(f"Playing as white: {is_white}")
 
@@ -111,7 +113,7 @@ async def game_stream(li: lichess.Lichess, game_id: str):
     # - Status: {event['status']}""")
 
                     # Record moves
-                    board = chess.Board()
+                    board = chess.Board(fen=org_fen)
                     moves = [w for w in event['moves'].strip().split(" ") if w]
 
                     # info(f"White's move: {len(moves) % 2 == 0 and is_white}")
@@ -126,13 +128,13 @@ async def game_stream(li: lichess.Lichess, game_id: str):
 
                             # Play move
                             start = time.time()
-                            result = Engine.play(board, chess.engine.Limit(white_clock=event["wtime"], black_clock=event["btime"], white_inc=event["winc"], black_inc=event["binc"], depth=5))
+                            try:
+                                result = Engine.play(board, chess.engine.Limit(white_clock=event["wtime"], black_clock=event["btime"], white_inc=event["winc"], black_inc=event["binc"]))
+                            except chess.engine.EngineError:
+                                li.resign(game_id)
                             info("Think time taken: " + str(round(time.time()-start, 2)))
                             try:
-                                if result.move == "a1h8":
-                                    li.resign(game_id)
-                                else:
-                                    li.make_move(game_id, result.move)
+                                li.make_move(game_id, result.move)
                             except:
                                 info(f"Move {str(result.move.uci())} was unable to be sent to the server.")
                         else:
